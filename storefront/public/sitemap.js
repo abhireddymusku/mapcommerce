@@ -3,6 +3,9 @@
 // Site   : Medusa Demo Store
 // URL    : https://storefront-production-fe70.up.railway.app
 // Locale : /dk
+// Schema events used: catalog (Engagement)
+//                     contactPointEmail (Profile)
+//                     identity (Profile)
 // ============================================================
 
 console.log("[Data360] sitemap.js loaded")
@@ -13,10 +16,21 @@ console.log("[Data360] getSalesforceInteractions()", SI)
 
 SI.init({
   cookieDomain: "storefront-production-fe70.up.railway.app",
+  // For demo purposes: all users are opted in by default immediately
+  consents: new Promise((resolve) => {
+    resolve([
+      {
+        provider: "Demo",
+        purpose: SI.ConsentPurpose.Tracking,
+        status: SI.ConsentStatus.OptIn,
+      },
+    ])
+  }),
 }).then(() => {
 
   console.log("[Data360] ✅ init complete")
   console.log("[Data360] anonymousId:", SI.getAnonymousId())
+  console.log("[Data360] consents:", SI.getConsents())
   console.log("[Data360] current page:", window.location.pathname)
 
   // Helper: wait for price to appear in DOM (MedusaJS renders client-side)
@@ -39,6 +53,9 @@ SI.init({
 
   const sitemapConfig = {
 
+    // ----------------------------------------------------------
+    // GLOBAL
+    // ----------------------------------------------------------
     global: {
       onActionEvent: (actionEvent) => {
         console.group("[Data360] 📡 EVENT FIRED")
@@ -51,6 +68,9 @@ SI.init({
       },
     },
 
+    // ----------------------------------------------------------
+    // PAGE TYPES
+    // ----------------------------------------------------------
     pageTypes: [
 
       // ── 1. PRODUCT DETAIL PAGE ──────────────────────────────
