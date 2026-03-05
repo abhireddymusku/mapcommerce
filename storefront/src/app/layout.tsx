@@ -21,11 +21,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 <Script
   src="https://cdn.c360a.salesforce.com/beacon/c360a/dccaf7d4-a0e1-4395-9e2b-0a1d89135d34/scripts/c360a.min.js"
   strategy="afterInteractive"
-  onLoad={() => {
-    const script = document.createElement("script")
-    script.src = "/sitemap.js"
-    document.body.appendChild(script)
-  }}
+/>
+<Script
+  src="/sitemap.js"
+  strategy="lazyOnload"
 />
     </html>
   )
