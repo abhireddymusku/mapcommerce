@@ -2,7 +2,7 @@ import Script from "next/script"
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import "styles/globals.css"
-import Data360 from "@/components/data360"
+import Data360 from "@/components/data360.tsx"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
