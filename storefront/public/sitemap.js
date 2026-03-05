@@ -9,7 +9,7 @@
 // ============================================================
 
 SalesforceInteractions.init({
-  cookieDomain: "storefront-production-fe70.up.railway.app/dk",
+  cookieDomain: "storefront-production-fe70.up.railway.app",
 }).then(() => {
 
   // Helper: wait for a DOM element matching a price (€) to appear,
