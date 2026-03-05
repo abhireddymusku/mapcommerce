@@ -13,16 +13,19 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <main className="relative">{props.children}</main>
       </body>
       {/* Data360 beacon CDN — copy this URL from Data360 Setup → Integration Guide */}
-        <Script
-          src="https://cdn.c360a.salesforce.com/beacon/c360a/dccaf7d4-a0e1-4395-9e2b-0a1d89135d34/scripts/c360a.min.js"
-          strategy="afterInteractive"
-        />
+        import Script from "next/script"
 
-        {/* Sitemap — must load after the beacon above */}
-        <Script
-          src="/sitemap.js"
-          strategy="afterInteractive"
-        />
+// your existing layout code...
+
+<Script
+  src="https://cdn.c360a.salesforce.com/beacon/c360a/dccaf7d4-a0e1-4395-9e2b-0a1d89135d34/scripts/c360a.min.js"
+  strategy="afterInteractive"
+  onLoad={() => {
+    const script = document.createElement("script")
+    script.src = "/sitemap.js"
+    document.body.appendChild(script)
+  }}
+/>
     </html>
   )
 }
