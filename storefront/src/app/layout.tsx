@@ -2,6 +2,7 @@ import Script from "next/script"
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import "styles/globals.css"
+import Data360 from "@/components/data360"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -18,14 +19,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 
 // your existing layout code...
 
-<Script
-  src="https://cdn.c360a.salesforce.com/beacon/c360a/dccaf7d4-a0e1-4395-9e2b-0a1d89135d34/scripts/c360a.min.js"
-  strategy="afterInteractive"
-/>
-<Script
-  src="/sitemap.js"
-  strategy="lazyOnload"
-/>
+<Data360 />
     </html>
   )
 }
