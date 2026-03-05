@@ -3,65 +3,75 @@
 // Site   : Medusa Demo Store
 // URL    : https://storefront-production-fe70.up.railway.app
 // Locale : /dk
-// Schema events used: catalog (Engagement)
-//                     contactPointEmail (Profile)
-//                     identity (Profile)
 // ============================================================
 
-SalesforceInteractions.init({
+console.log("[Data360] sitemap.js loaded")
+
+const SI = getSalesforceInteractions()
+
+console.log("[Data360] getSalesforceInteractions()", SI)
+
+SI.init({
   cookieDomain: "storefront-production-fe70.up.railway.app",
 }).then(() => {
 
-  // Helper: wait for a DOM element matching a price (€) to appear,
-  // then return the numeric value. MedusaJS renders price client-side.
+  console.log("[Data360] ✅ init complete")
+  console.log("[Data360] anonymousId:", SI.getAnonymousId())
+  console.log("[Data360] current page:", window.location.pathname)
+
+  // Helper: wait for price to appear in DOM (MedusaJS renders client-side)
   const waitForPrice = () =>
     new Promise((resolve) => {
       const read = () => {
         const el = Array.from(document.querySelectorAll("span, p, div")).find(
           (n) => n.children.length === 0 && /€\s*[\d.,]+/.test(n.textContent)
-        );
+        )
         if (el) {
-          const numeric = parseFloat(el.textContent.replace(/[^0-9.]/g, ""));
-          resolve(isNaN(numeric) ? null : numeric);
+          const numeric = parseFloat(el.textContent.replace(/[^0-9.]/g, ""))
+          console.log("[Data360] 💰 price found:", numeric)
+          resolve(isNaN(numeric) ? null : numeric)
         } else {
-          setTimeout(read, 300);
+          setTimeout(read, 300)
         }
-      };
-      read();
-    });
+      }
+      read()
+    })
 
   const sitemapConfig = {
 
-    // ----------------------------------------------------------
-    // GLOBAL
-    // ----------------------------------------------------------
     global: {
-      onActionEvent: (actionEvent) => actionEvent,
+      onActionEvent: (actionEvent) => {
+        console.group("[Data360] 📡 EVENT FIRED")
+        console.log("  type       :", actionEvent.action)
+        console.log("  eventType  :", actionEvent.event?.eventType)
+        console.log("  page       :", actionEvent.event?.sourceUrl || window.location.pathname)
+        console.log("  full event :", actionEvent)
+        console.groupEnd()
+        return actionEvent
+      },
     },
 
-    // ----------------------------------------------------------
-    // PAGE TYPES
-    // ----------------------------------------------------------
     pageTypes: [
 
       // ── 1. PRODUCT DETAIL PAGE ──────────────────────────────
-      // Fires a "catalog" Engagement event with:
-      //   id           = product slug (e.g. "sweatshirt")
-      //   type         = "Product"
-      //   productName  → mapped to schema field: productName (Text)
-      //   productPrice → mapped to schema field: productPrice (Number)
       {
         name: "productDetail",
-        isMatch: () => /\/dk\/products\/[^/]+$/.test(window.location.pathname),
+        isMatch: () => {
+          const match = /\/dk\/products\/[^/]+$/.test(window.location.pathname)
+          if (match) console.log("[Data360] 📄 matched page: productDetail —", window.location.pathname)
+          return match
+        },
         interaction: {
-          name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
+          name: SI.CatalogObjectInteractionName.ViewCatalogObject,
           catalogObject: {
             type: "Product",
             id: () => window.location.pathname.split("/").pop(),
             attributes: {
               productName: () => {
-                const el = document.querySelector("h2");
-                return el ? el.textContent.trim() : null;
+                const el = document.querySelector("h2")
+                const name = el ? el.textContent.trim() : null
+                console.log("[Data360] 🏷️  productName:", name)
+                return name
               },
               productPrice: () => waitForPrice(),
             },
@@ -70,14 +80,15 @@ SalesforceInteractions.init({
       },
 
       // ── 2. CATEGORY PAGE ────────────────────────────────────
-      // Fires a "catalog" Engagement event with:
-      //   id   = category slug (e.g. "shirts")
-      //   type = "Category"
       {
         name: "categoryPage",
-        isMatch: () => /\/dk\/categories\/[^/]+$/.test(window.location.pathname),
+        isMatch: () => {
+          const match = /\/dk\/categories\/[^/]+$/.test(window.location.pathname)
+          if (match) console.log("[Data360] 📄 matched page: categoryPage —", window.location.pathname)
+          return match
+        },
         interaction: {
-          name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
+          name: SI.CatalogObjectInteractionName.ViewCatalogObject,
           catalogObject: {
             type: "Category",
             id: () => window.location.pathname.split("/").pop(),
@@ -88,9 +99,13 @@ SalesforceInteractions.init({
       // ── 3. STORE LISTING ────────────────────────────────────
       {
         name: "storeListing",
-        isMatch: () => /\/dk\/store$/.test(window.location.pathname),
+        isMatch: () => {
+          const match = /\/dk\/store$/.test(window.location.pathname)
+          if (match) console.log("[Data360] 📄 matched page: storeListing —", window.location.pathname)
+          return match
+        },
         interaction: {
-          name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
+          name: SI.CatalogObjectInteractionName.ViewCatalogObject,
           catalogObject: {
             type: "Category",
             id: "store",
@@ -99,37 +114,41 @@ SalesforceInteractions.init({
       },
 
       // ── 4. ACCOUNT / LOGIN / REGISTER ───────────────────────
-      // Login  → fires "contactPointEmail" Profile event (email only)
-      // Register → fires "identity" Profile event (email + name)
       {
         name: "account",
-        isMatch: () => /\/dk\/account/.test(window.location.pathname),
+        isMatch: () => {
+          const match = /\/dk\/account/.test(window.location.pathname)
+          if (match) console.log("[Data360] 📄 matched page: account —", window.location.pathname)
+          return match
+        },
         interaction: {
           name: "View Account",
         },
         listeners: [
-          SalesforceInteractions.listener("submit", "form", async (event) => {
-            const form = event.target;
+          SI.listener("submit", "form", async (event) => {
+            const form = event.target
             const emailInput = form.querySelector(
               'input[type="email"], input[name="email"]'
-            );
-            if (!emailInput || !emailInput.value.trim()) return;
+            )
+            if (!emailInput || !emailInput.value.trim()) return
 
-            const email = emailInput.value.trim();
+            const email = emailInput.value.trim()
             const firstNameInput = form.querySelector(
               'input[name="first_name"], input[name="firstName"]'
-            );
-            const isRegister = !!firstNameInput;
+            )
+            const isRegister = !!firstNameInput
+
+            console.group("[Data360] 📝 form submit detected")
+            console.log("  isRegister:", isRegister)
+            console.log("  email     :", email)
+            console.groupEnd()
 
             if (isRegister) {
-              // ── REGISTER: fire "identity" event ──────────────
               const lastNameInput = form.querySelector(
                 'input[name="last_name"], input[name="lastName"]'
-              );
-              await SalesforceInteractions.sendEvent({
-                interaction: {
-                  name: "identity",
-                },
+              )
+              const payload = {
+                interaction: { name: "identity" },
                 user: {
                   attributes: {
                     eventType: "identity",
@@ -139,20 +158,23 @@ SalesforceInteractions.init({
                     isAnonymous: "0",
                   },
                 },
-              });
+              }
+              console.log("[Data360] 👤 sending identity event:", payload)
+              await SI.sendEvent(payload)
+              console.log("[Data360] ✅ identity event sent")
             } else {
-              // ── LOGIN: fire "contactPointEmail" event ─────────
-              await SalesforceInteractions.sendEvent({
-                interaction: {
-                  name: "contactPointEmail",
-                },
+              const payload = {
+                interaction: { name: "contactPointEmail" },
                 user: {
                   attributes: {
                     eventType: "contactPointEmail",
                     email: email,
                   },
                 },
-              });
+              }
+              console.log("[Data360] 📧 sending contactPointEmail event:", payload)
+              await SI.sendEvent(payload)
+              console.log("[Data360] ✅ contactPointEmail event sent")
             }
           }),
         ],
@@ -161,7 +183,11 @@ SalesforceInteractions.init({
       // ── 5. CART ─────────────────────────────────────────────
       {
         name: "cart",
-        isMatch: () => /\/dk\/cart$/.test(window.location.pathname),
+        isMatch: () => {
+          const match = /\/dk\/cart$/.test(window.location.pathname)
+          if (match) console.log("[Data360] 📄 matched page: cart —", window.location.pathname)
+          return match
+        },
         interaction: {
           name: "View Cart",
         },
@@ -177,7 +203,9 @@ SalesforceInteractions.init({
       },
 
     ],
-  };
+  }
 
-  SalesforceInteractions.initSitemap(sitemapConfig);
-});
+  SI.initSitemap(sitemapConfig)
+  console.log("[Data360] ✅ initSitemap complete — watching for page events")
+
+})
